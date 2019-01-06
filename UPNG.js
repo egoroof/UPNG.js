@@ -1,16 +1,6 @@
+var zlib = require('zlib');
 
-;(function(){
 var UPNG = {};
-
-// Make available for import by `require()`
-var pako;
-if (typeof module == "object") {module.exports = UPNG;}  else {window.UPNG = UPNG;}
-if (typeof require == "function") {pako = require("pako");}  else {pako = window.pako;}
-function log() { if (typeof process=="undefined" || process.env.NODE_ENV=="development") console.log.apply(console, arguments);  }
-(function(UPNG, pako){
-
-
-	
 
 UPNG.toRGBA8 = function(out)
 {
@@ -209,7 +199,7 @@ UPNG.decode._decompress = function(out, dd, w, h) {
 	return dd;
 }
 
-UPNG.decode._inflate = function(data) {  return pako["inflate"](data);  }
+UPNG.decode._inflate = function(data) {  return zlib.inflateSync(Buffer.from(data.buffer));  }
 
 UPNG.decode._readInterlace = function(data, out)
 {
@@ -396,14 +386,14 @@ UPNG.encode = function(bufs, w, h, ps, dels, forbidPlte)
 	return UPNG.encode._main(nimg, w, h, dels);
 }
 
-UPNG.encodeLL = function(bufs, w, h, cc, ac, depth, dels) {
+UPNG.encodeLL = function(bufs, w, h, cc, ac, depth, filter, dels) {
 	var nimg = {  ctype: 0 + (cc==1 ? 0 : 2) + (ac==0 ? 0 : 4),      depth: depth,  frames: []  };
 	
 	var bipp = (cc+ac)*depth, bipl = bipp * w;
 	for(var i=0; i<bufs.length; i++)
 		nimg.frames.push({  rect:{x:0,y:0,width:w,height:h},  img:new Uint8Array(bufs[i]), blend:0, dispose:1, bpp:Math.ceil(bipp/8), bpl:Math.ceil(bipl/8)  });
 	
-	UPNG.encode.compressPNG(nimg, 4);
+	UPNG.encode.compressPNG(nimg, filter);
 	
 	return UPNG.encode._main(nimg, w, h, dels);
 }
@@ -657,12 +647,12 @@ UPNG.encode._filterZero = function(img,h,bpp,bpl,data, filter)
 {
 	if(filter!=-1) {
 		for(var y=0; y<h; y++) UPNG.encode._filterLine(data, img, y, bpl, bpp, filter);
-		return pako["deflate"](data);
+		return zlib.deflateSync(Buffer.from(data.buffer));
 	}
 	var fls = [];
 	for(var t=0; t<5; t++) {  if(h*bpl>500000 && (t==2 || t==3 || t==4)) continue;
 		for(var y=0; y<h; y++) UPNG.encode._filterLine(data, img, y, bpl, bpp, t);
-		fls.push(pako["deflate"](data));  if(bpp==1) break;
+		fls.push(zlib.deflateSync(Buffer.from(data.buffer)));  if(bpp==1) break;
 	}
 	var ti, tsize=1e9;
 	for(var i=0; i<fls.length; i++) if(fls[i].length<tsize) {  ti=i;  tsize=fls[i].length;  }
@@ -887,13 +877,4 @@ UPNG.encode.concatRGBA = function(bufs, roundAlpha) {
 	return nimg.buffer;
 }
 
-
-
-
-	
-	
-
-
-})(UPNG, pako);
-})();
-
+module.exports = UPNG;

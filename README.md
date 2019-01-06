@@ -1,4 +1,10 @@
 # UPNG.js
+
+This is a fork with two changes:
+
+- works only in Node.js and uses embedded `zlib` (which is faster)
+- UPNG.encodeLL takes additional argument - `filter`
+
 A small, fast and advanced PNG / APNG encoder and decoder. It is the main PNG engine for [Photopea image editor](https://www.photopea.com).
 
 * [Examples of PNGs minified by UPNG.js](https://blog.photopea.com/png-minifier-inside-photopea.html#examples)
@@ -9,7 +15,7 @@ A small, fast and advanced PNG / APNG encoder and decoder. It is the main PNG en
 Download and include the `UPNG.js` file in your code, or get it from NPM:
 
 ```sh
-npm install upng-js
+npm install @egoroof/upng
 ```
 
 ## Encoder
@@ -32,11 +38,12 @@ Lossy compression is allowed by the last parameter `cnum`. Set it to zero for a 
     //  dta = new Uint8Array(200 * 300 * 4);       // or generate pixels manually
     var png = UPNG.encode([dta.buffer], 200, 300, 0);   console.log(new Uint8Array(png));
 
-#### `UPNG.encodeLL(imgs, w, h, cc, ac, depth, [dels])` - low-level encode
+#### `UPNG.encodeLL(imgs, w, h, cc, ac, depth, filter, [dels])` - low-level encode
 * `imgs`: array of frames. A frame is an ArrayBuffer containing the pixel data (corresponding to following parameters)
 * `w`, `h` : width and height of the image
 * `cc`, `ac`: number of color channels (1 or 3) and alpha channels (0 or 1)
 * `depth`: bit depth of pixel data (1, 2, 4, 8, 16)
+* `filter`: filter type https://www.w3.org/TR/PNG/#9Filters (-1 (find best), 0, 1, 2, 3, 4)
 * `dels`: array of delays for each frame (only when 2 or more frames)
 * returns an ArrayBuffer with binary data of a PNG file
 
